@@ -1,4 +1,17 @@
 /**
+ * Generate a random session ID for the user.
+ */
+$(window).on('load', function () {
+	// generate random session ID
+	let sessionID = Math.floor(Math.random() * 1000000);
+	$('#session_id').text(sessionID);
+});
+
+// Read value of 'demo' key from URL parameter
+const urlParams = new URLSearchParams(window.location.search);
+const demo = urlParams.get('demo');
+
+/**
  * Returns the current datetime for the message creation.
  */
 function getCurrentTimestamp() {
@@ -107,10 +120,3 @@ function randomstring(length = 20) {
 	while (output.length < length) output += randomchar();
 	return output;
 }
-
-/**
- * Set initial bot message to the screen for the user.
- */
-$(window).on('load', function () {
-	showBotMessage('Hello there! Type in a message.');
-});
