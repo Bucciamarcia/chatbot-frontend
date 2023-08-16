@@ -1,11 +1,60 @@
 /**
- * Generate a random session ID for the user.
+ * Generate a random session ID for the user, 4 sets of 6 alphanumeric characters.
  */
-$(window).on('load', function () {
-	// generate random session ID
-	let sessionID = Math.floor(Math.random() * 1000000);
-	$('#session_id').text(sessionID);
-});
+const sessionID = randomstring(6) + '-' + randomstring(6) + '-' + randomstring(6) + '-' + randomstring(6);
+
+const gcfUrl = 'https://europe-west6-edgarbot-383711.cloudfunctions.net/webhook_synchronous';
+
+//Set timeout to 2 minutes
+const TIMEOUT = 120000;
+
+async function callEdgarbot(message) {
+    let messagesPayload = {
+        provider_item_id: sessionID,
+        customer: demo,
+        webhook_key: 'sadoufhg3RTH3greqwaQW3g',
+        workflow: 'default',
+        provider: 'webchat',
+        raw_data: message
+    };
+
+	const controller = new AbortController();
+    const timeout = setTimeout(() => {
+        controller.abort();
+    }, TIMEOUT);
+	
+    try {
+		let response = await fetch(gcfUrl, {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify(messagesPayload),
+			signal: controller.signal,
+		});
+
+		clearTimeout(timeout);
+
+		if (response.ok) {
+			let data = await response.json();
+			let responseMessage = data.answer;
+			// return responseMessage;
+			showBotMessage(responseMessage);
+		} else {
+			console.error("Error: ", response.status);
+			showBotMessage(`Errore! Ricarica la pagina e riprova. MESSAGGIO DI ERRORE: ${response.status}`);
+		}
+	} catch (error) {
+		clearTimeout(timeout);
+		if (error.name === 'AbortError') {
+            console.error("Request timed out");
+            showBotMessage('Errore! La richiesta è scaduta. Per favore riprova.');
+        } else {
+			console.error("Error: ", error);
+			showBotMessage(`Errore! Ricarica la pagina e riprova. MESSAGGIO DI ERRORE: ${error}`);
+		}
+	}
+}
 
 // Read value of 'demo' key from URL parameter
 const urlParams = new URLSearchParams(window.location.search);
@@ -89,18 +138,26 @@ function showBotMessage(message, datetime) {
 	});
 }
 
+let userMessage = '';
+
 /**
  * Get input from user and show it on screen on button click.
  */
 $('#send_button').on('click', function (e) {
+	let userMessage = $('#msg_input').val();
 	// get and show message and reset input
-	showUserMessage($('#msg_input').val());
+	showUserMessage(userMessage);
 	$('#msg_input').val('');
+	// Print to console the info sent to Edgarbot
+	console.log(`Session ID: ${sessionID} - Message: ${userMessage}`);
 
-	// show bot message
-	setTimeout(function () {
-		showBotMessage(randomstring());
-	}, 300);
+	// Call Edgarbot if user message is not empty and demo is not null
+	if (userMessage !== '' && demo !== null) {
+		callEdgarbot(userMessage);
+	} else {
+		showBotMessage('Errore! Messaggio vuoto o valore di "demo" non specificato nel parametro URL.');
+	}
+
 });
 
 /**

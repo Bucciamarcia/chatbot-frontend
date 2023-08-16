@@ -113,6 +113,9 @@ body {
 .messages .message.left .text_wrapper {
 	background-color: #f3eeca;
 	margin-left: 20px;
+	max-width: 70%;
+	word-wrap: break-word;
+    overflow-wrap: break-word;
 }
 
 .messages .message.left .text_wrapper::after,
@@ -136,6 +139,9 @@ body {
 	background-color: #b0d4f3;
 	margin-right: 20px;
 	float: right;
+	max-width: 70%;
+	word-wrap: break-word;
+    overflow-wrap: break-word;
 }
 
 .messages .message.right .text_wrapper::after,
